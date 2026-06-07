@@ -1,0 +1,1199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🔥 StreakBuddy</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      :root {
+        --bg: #0f0e17;
+        --surface: #1a1828;
+        --card: #231f35;
+        --border: #2e2a45;
+        --accent: #ff6b35;
+        --accent2: #ff9f1c;
+        --accent3: #ffcc02;
+        --green: #06d6a0;
+        --blue: #118ab2;
+        --pink: #ef476f;
+        --text: #fffffe;
+        --muted: #a7a9be;
+        --radius: 20px;
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Nunito", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: scroll;
+        position: relative;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 60% 50% at 20% 20%,
+            rgba(255, 107, 53, 0.08) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 50% 60% at 80% 80%,
+            rgba(255, 159, 28, 0.06) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 40% 40% at 50% 50%,
+            rgba(17, 138, 178, 0.04) 0%,
+            transparent 70%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+      .app {
+        width: 100%;
+        max-width: 440px;
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .screen {
+        display: none;
+        animation: fadeUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      }
+      .screen.active {
+        display: block;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        box-shadow: var(--shadow);
+      }
+
+      /* LOGO */
+      .logo {
+        text-align: center;
+        margin-bottom: 28px;
+      }
+      .logo-icon {
+        font-size: 52px;
+        display: block;
+        animation: bounce 2s infinite;
+      }
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-8px);
+        }
+      }
+      .logo h1 {
+        font-family: "Fredoka One", cursive;
+        font-size: 2rem;
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent2),
+          var(--accent3)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-top: 4px;
+      }
+      .logo p {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-top: 4px;
+      }
+
+      /* FORM */
+      .field {
+        margin-bottom: 16px;
+      }
+      .field label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--muted);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .field input {
+        width: 100%;
+        background: var(--surface);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: var(--text);
+        font-family: "Nunito", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        outline: none;
+      }
+      .field input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.12);
+      }
+
+      /* BUTTONS */
+      .btn {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 14px;
+        font-family: "Fredoka One", cursive;
+        font-size: 1.05rem;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s,
+          opacity 0.15s;
+        position: relative;
+        overflow: hidden;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: white;
+        box-shadow: 0 4px 20px rgba(255, 107, 53, 0.35);
+        margin-top: 8px;
+      }
+      .btn-primary:hover {
+        box-shadow: 0 6px 28px rgba(255, 107, 53, 0.5);
+        transform: translateY(-1px);
+      }
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-streak {
+        background: linear-gradient(135deg, #ff4500, #ff6b35, #ffcc02);
+        color: white;
+        font-size: 1.2rem;
+        padding: 18px;
+        border-radius: 20px;
+        box-shadow: 0 6px 30px rgba(255, 100, 30, 0.45);
+        margin-top: 8px;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .btn-streak:hover {
+        box-shadow: 0 10px 40px rgba(255, 100, 30, 0.6);
+        transform: translateY(-2px);
+      }
+      .btn-streak::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.15),
+          transparent
+        );
+        border-radius: inherit;
+      }
+
+      /* RESTORE button — purple */
+      .btn-restore {
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        color: white;
+        font-size: 1.1rem;
+        padding: 16px;
+        border-radius: 20px;
+        box-shadow: 0 6px 30px rgba(124, 58, 237, 0.45);
+        margin-top: 8px;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .btn-restore:hover {
+        box-shadow: 0 10px 40px rgba(124, 58, 237, 0.6);
+        transform: translateY(-2px);
+      }
+      .btn-restore::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.12),
+          transparent
+        );
+        border-radius: inherit;
+      }
+
+      /* ERROR */
+      .error-msg {
+        background: rgba(239, 71, 111, 0.12);
+        border: 1px solid rgba(239, 71, 111, 0.3);
+        color: var(--pink);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-top: 12px;
+        display: none;
+        text-align: center;
+      }
+      .error-msg.show {
+        display: block;
+        animation: shake 0.4s both;
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-6px);
+        }
+        75% {
+          transform: translateX(6px);
+        }
+      }
+
+      /* GAME SCREEN top bar */
+      .welcome-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .welcome-bar .username {
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .welcome-bar .username span {
+        color: var(--accent2);
+      }
+      .logout-btn {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        font-family: "Nunito", sans-serif;
+        font-weight: 700;
+        transition: all 0.2s;
+      }
+      .logout-btn:hover {
+        border-color: var(--pink);
+        color: var(--pink);
+      }
+
+      /* PET */
+      .pet-area {
+        text-align: center;
+        padding: 24px 0 16px;
+        position: relative;
+      }
+      .pet-container {
+        position: relative;
+        display: inline-block;
+      }
+      .pet {
+        font-size: 80px;
+        display: block;
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        filter: drop-shadow(0 8px 20px rgba(255, 107, 53, 0.3));
+      }
+      .pet.happy {
+        animation: petBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      }
+      .pet.sad {
+        animation: petShake 0.6s both;
+        filter: grayscale(0.4) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+      }
+      .pet.idle {
+        animation: petFloat 3s ease-in-out infinite;
+      }
+      @keyframes petBounce {
+        0% {
+          transform: scale(1);
+        }
+        30% {
+          transform: scale(1.3) rotate(-5deg);
+        }
+        60% {
+          transform: scale(0.9) rotate(3deg);
+        }
+        100% {
+          transform: scale(1) rotate(0);
+        }
+      }
+      @keyframes petShake {
+        0%,
+        100% {
+          transform: rotate(0deg);
+        }
+        20% {
+          transform: rotate(-10deg);
+        }
+        40% {
+          transform: rotate(8deg);
+        }
+        60% {
+          transform: rotate(-6deg);
+        }
+        80% {
+          transform: rotate(4deg);
+        }
+      }
+      @keyframes petFloat {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-8px) rotate(2deg);
+        }
+      }
+
+      .sparkles {
+        position: absolute;
+        inset: -20px;
+        pointer-events: none;
+      }
+      .sparkle {
+        position: absolute;
+        font-size: 18px;
+        opacity: 0;
+        animation: sparkleAnim 1.2s ease-out both;
+      }
+      @keyframes sparkleAnim {
+        0% {
+          opacity: 0;
+          transform: translate(0, 0) scale(0);
+        }
+        50% {
+          opacity: 1;
+          transform: translate(var(--tx), var(--ty)) scale(1.2);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(calc(var(--tx) * 1.6), calc(var(--ty) * 1.6))
+            scale(0);
+        }
+      }
+
+      .pet-speech {
+        background: var(--surface);
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        padding: 10px 16px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--muted);
+        margin: 12px auto 0;
+        max-width: 280px;
+        position: relative;
+        transition: all 0.3s;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .pet-speech::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-bottom-color: var(--border);
+      }
+      .pet-speech::after {
+        content: "";
+        position: absolute;
+        top: -7px;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-bottom-color: var(--surface);
+      }
+
+      /* STREAK DISPLAY */
+      .streak-display {
+        display: flex;
+        gap: 12px;
+        margin: 20px 0;
+      }
+      .streak-box {
+        flex: 1;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px 12px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s;
+      }
+      .streak-box::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 107, 53, 0.05),
+          transparent
+        );
+        border-radius: inherit;
+      }
+      .streak-box .label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 6px;
+      }
+      .streak-box .value {
+        font-family: "Fredoka One", cursive;
+        font-size: 2.2rem;
+        line-height: 1;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        transition: all 0.4s;
+      }
+      .streak-box .icon {
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+      }
+      .streak-box.fire-box .value {
+        background: linear-gradient(135deg, #ff4500, #ffcc02);
+        -webkit-background-clip: text;
+        background-clip: text;
+      }
+
+      /* Score bump animation */
+      @keyframes scorePop {
+        0% {
+          transform: scale(1);
+        }
+        40% {
+          transform: scale(1.5);
+        }
+        70% {
+          transform: scale(0.9);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      .score-pop {
+        animation: scorePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      }
+
+      /* PLAYERS ROW */
+      .players-row {
+        display: flex;
+        gap: 12px;
+        margin: 20px 0 16px;
+      }
+      .player-card {
+        flex: 1;
+        background: var(--surface);
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        padding: 14px 10px;
+        text-align: center;
+        position: relative;
+        transition: border-color 0.3s;
+      }
+      .player-card.active-player {
+        border-color: var(--accent);
+      }
+      .player-card.partner-done {
+        border-color: var(--green);
+      }
+      .player-card .p-name {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .player-card .p-icon {
+        font-size: 1.2rem;
+        margin: 4px 0;
+      }
+      .player-card .p-date {
+        font-size: 0.68rem;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .vs-badge {
+        align-self: center;
+        font-family: "Fredoka One", cursive;
+        font-size: 0.9rem;
+        color: var(--muted);
+        background: var(--border);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      /* STATUS */
+      .status-msg {
+        border-radius: 14px;
+        padding: 14px 16px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 16px;
+        display: none;
+        animation: fadeUp 0.4s both;
+      }
+      .status-msg.show {
+        display: block;
+      }
+      .status-msg.success {
+        background: rgba(6, 214, 160, 0.1);
+        border: 1px solid rgba(6, 214, 160, 0.3);
+        color: var(--green);
+      }
+      .status-msg.warning {
+        background: rgba(255, 204, 2, 0.1);
+        border: 1px solid rgba(255, 204, 2, 0.3);
+        color: var(--accent3);
+      }
+      .status-msg.info {
+        background: rgba(255, 107, 53, 0.1);
+        border: 1px solid rgba(255, 107, 53, 0.3);
+        color: var(--accent);
+      }
+
+      /* CONFETTI */
+      .confetti-piece {
+        position: fixed;
+        width: 10px;
+        height: 10px;
+        pointer-events: none;
+        z-index: 999;
+        border-radius: 2px;
+        animation: confettiFall linear both;
+      }
+      @keyframes confettiFall {
+        0% {
+          opacity: 1;
+          transform: translate(0, 0) rotate(0deg) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(var(--dx), 100vh) rotate(720deg) scale(0.5);
+        }
+      }
+
+      /* LOADING */
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* DONE BADGE */
+      .done-badge {
+        background: linear-gradient(
+          135deg,
+          rgba(6, 214, 160, 0.15),
+          rgba(6, 214, 160, 0.05)
+        );
+        border: 2px solid rgba(6, 214, 160, 0.4);
+        border-radius: 14px;
+        padding: 12px;
+        text-align: center;
+        margin-bottom: 16px;
+        display: none;
+      }
+      .done-badge.show {
+        display: block;
+        animation: fadeUp 0.4s both;
+      }
+      .done-badge span {
+        font-size: 1.3rem;
+        display: block;
+      }
+      .done-badge p {
+        color: var(--green);
+        font-weight: 800;
+        font-size: 0.9rem;
+        margin-top: 4px;
+      }
+
+      /* MISSED BADGE */
+      .missed-badge {
+        background: linear-gradient(
+          135deg,
+          rgba(124, 58, 237, 0.15),
+          rgba(168, 85, 247, 0.05)
+        );
+        border: 2px solid rgba(124, 58, 237, 0.4);
+        border-radius: 14px;
+        padding: 12px;
+        text-align: center;
+        margin-bottom: 16px;
+        display: none;
+      }
+      .missed-badge.show {
+        display: block;
+        animation: fadeUp 0.4s both;
+      }
+      .missed-badge span {
+        font-size: 1.3rem;
+        display: block;
+      }
+      .missed-badge p {
+        color: #a855f7;
+        font-weight: 800;
+        font-size: 0.88rem;
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- LOGIN SCREEN -->
+      <div class="screen active" id="loginScreen">
+        <div class="card">
+          <div class="logo">
+            <span class="logo-icon">🔥</span>
+            <h1>StreakBuddy</h1>
+            <p>Keep the streak going with your buddy!</p>
+          </div>
+          <div class="field">
+            <label>Username</label>
+            <input
+              type="text"
+              id="loginUser"
+              placeholder="username"
+              autocomplete="off"
+            />
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="loginPass" placeholder="••••••" />
+          </div>
+          <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">
+            Sign In 🚀
+          </button>
+          <div class="error-msg" id="loginError"></div>
+        </div>
+      </div>
+
+      <!-- GAME SCREEN -->
+      <div class="screen" id="gameScreen">
+        <div class="welcome-bar">
+          <div class="username">Hey <span id="displayName"></span> 😚</div>
+          <button class="logout-btn" onclick="doLogout()">Logout</button>
+        </div>
+
+        <div class="card">
+          <!-- Pet -->
+          <div class="pet-area">
+            <div class="pet-container">
+              <div class="sparkles" id="sparkles"></div>
+              <span class="pet idle" id="pet">🐣</span>
+            </div>
+            <div class="pet-speech" id="petSpeech">
+              Hey there! Ready to log your streak? 😊
+            </div>
+          </div>
+
+          <!-- Streak counter -->
+          <div class="streak-display">
+            <div class="streak-box fire-box">
+              <div class="icon">🔥</div>
+              <div class="label">Current Streak</div>
+              <div class="value" id="streakCount">0</div>
+            </div>
+          </div>
+
+          <!-- Players -->
+          <div class="players-row">
+            <div class="player-card" id="myCard">
+              <div class="p-name" id="myName">—</div>
+              <div class="p-icon" id="myIcon">⏳</div>
+              <div class="p-date" id="myDate">Not checked in</div>
+            </div>
+            <div class="vs-badge">VS</div>
+            <div class="player-card" id="partnerCard">
+              <div class="p-name" id="partnerName">—</div>
+              <div class="p-icon" id="partnerIcon">⏳</div>
+              <div class="p-date" id="partnerDate">Not checked in</div>
+            </div>
+          </div>
+
+          <!-- Status message -->
+          <div class="status-msg" id="statusMsg"></div>
+
+          <!-- Already done badge -->
+          <div class="done-badge" id="doneBadge">
+            <span>✅</span>
+            <p>You checked in today! Keep it up 🎉</p>
+          </div>
+
+          <!-- Missed days badge -->
+          <div class="missed-badge" id="missedBadge">
+            <span>😴</span>
+            <p id="missedText">You missed some days — restore your streak!</p>
+          </div>
+
+          <!-- Action button (swaps between checkin / restore) -->
+          <button class="btn btn-streak" id="checkinBtn" onclick="doCheckin()">
+            🔥 Check In Today!
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const SUPABASE_URL = "https://wvmmxllljrubohfdlajz.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_UuoDeFzb9HHjCY7l1Z8TMg_g2hBFghe";
+      const { createClient } = supabase;
+      const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      let currentUser = null;
+      let gameRow = null;
+      let isRestoreMode = false; // true when user missed days
+
+      const todayStr = () => {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      };
+
+      // ── helpers ──────────────────────────────────────────────────
+      function screen(id) {
+        document
+          .querySelectorAll(".screen")
+          .forEach((s) => s.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+      }
+      function showError(id, msg) {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.classList.add("show");
+        setTimeout(() => el.classList.remove("show"), 3500);
+      }
+      function showStatus(msg, type = "success") {
+        const el = document.getElementById("statusMsg");
+        el.textContent = msg;
+        el.className = `status-msg ${type} show`;
+        setTimeout(() => el.classList.remove("show"), 4500);
+      }
+
+      // ── pet ───────────────────────────────────────────────────────
+      const HAPPY_SPEECHES = [
+        "Wow! Amazing! Keep it going! 🔥",
+        "Streak is ON FIRE! 🚀",
+        "You're a star! ⭐",
+        "Unstoppable! 💥",
+        "Consistency is the secret! 👑",
+        "Both in! That's what I'm talking about! 🎉",
+      ];
+      const SAD_SPEECHES = [
+        "Come on... you haven't checked in yet 😢",
+        "Still waiting for today's check-in... 😔",
+        "Don't leave me hanging! 🥺",
+      ];
+      const ENCOURAGE_SPEECHES = [
+        "🌟 Keep it up! Every day counts!",
+        "🏆 You're making history!",
+        "💫 Consistency builds legends!",
+        "🎯 Day by day the streak grows!",
+        "🌈 Every new day is a new chance!",
+      ];
+
+      function setPet(state, customSpeech = "") {
+        const pet = document.getElementById("pet");
+        const speechEl = document.getElementById("petSpeech");
+        const states = {
+          happy: { emoji: "🥳", anim: "happy" },
+          sad: { emoji: "😢", anim: "sad" },
+          idle: { emoji: "🐣", anim: "idle" },
+        };
+        pet.textContent = states[state].emoji;
+        pet.className = `pet ${states[state].anim}`;
+
+        let speech = customSpeech;
+        if (!speech && state === "happy")
+          speech =
+            HAPPY_SPEECHES[Math.floor(Math.random() * HAPPY_SPEECHES.length)];
+        if (!speech && state === "sad")
+          speech =
+            SAD_SPEECHES[Math.floor(Math.random() * SAD_SPEECHES.length)];
+        if (!speech) speech = "Hey there! 😊";
+        speechEl.textContent = speech;
+      }
+
+      function throwSparkles() {
+        const container = document.getElementById("sparkles");
+        container.innerHTML = "";
+        const emojis = ["✨", "⭐", "🌟", "💫", "🔥", "🎉"];
+        for (let i = 0; i < 8; i++) {
+          const s = document.createElement("span");
+          s.className = "sparkle";
+          s.textContent = emojis[i % emojis.length];
+          const angle = (i / 8) * Math.PI * 2;
+          s.style.setProperty("--tx", `${Math.cos(angle) * 60}px`);
+          s.style.setProperty("--ty", `${Math.sin(angle) * 60}px`);
+          s.style.left = "50%";
+          s.style.top = "50%";
+          s.style.animationDelay = `${i * 0.08}s`;
+          container.appendChild(s);
+        }
+      }
+
+      function fireConfetti() {
+        const colors = [
+          "#ff6b35",
+          "#ffcc02",
+          "#06d6a0",
+          "#ef476f",
+          "#118ab2",
+          "#ff9f1c",
+        ];
+        for (let i = 0; i < 70; i++) {
+          const piece = document.createElement("div");
+          piece.className = "confetti-piece";
+          piece.style.left = `${Math.random() * 100}vw`;
+          piece.style.top = "-10px";
+          piece.style.background =
+            colors[Math.floor(Math.random() * colors.length)];
+          piece.style.setProperty("--dx", `${(Math.random() - 0.5) * 200}px`);
+          piece.style.animationDuration = `${1.5 + Math.random()}s`;
+          piece.style.animationDelay = `${Math.random() * 0.5}s`;
+          document.body.appendChild(piece);
+          setTimeout(() => piece.remove(), 2500);
+        }
+      }
+
+      function animateScore(newVal) {
+        const el = document.getElementById("streakCount");
+        el.classList.remove("score-pop");
+        void el.offsetWidth; // reflow to restart animation
+        el.textContent = newVal;
+        el.classList.add("score-pop");
+      }
+
+      // ── render game UI from a data row ────────────────────────────
+      function renderGame(data) {
+        gameRow = data;
+        const isUser1 = currentUser === "user1";
+        const myUsername = isUser1 ? data.user1 : data.user2;
+        const partnerUsername = isUser1 ? data.user2 : data.user1;
+        const myDateCol = isUser1 ? "date1" : "date2";
+        const partnerDateCol = isUser1 ? "date2" : "date1";
+        const today = todayStr();
+        const myDate = data[myDateCol] || null;
+        const partnerDate = data[partnerDateCol] || null;
+        const streak = data.score || 0;
+
+        document.getElementById("displayName").textContent = myUsername;
+        document.getElementById("myName").textContent = myUsername;
+        document.getElementById("partnerName").textContent = partnerUsername;
+        document.getElementById("streakCount").textContent = streak;
+
+        // Player check-in status icons + dates
+        const myDone = myDate === today;
+        const partnerDone = partnerDate === today;
+
+        document.getElementById("myIcon").textContent = myDone ? "✅" : "⏳";
+        document.getElementById("partnerIcon").textContent = partnerDone
+          ? "✅"
+          : "⏳";
+        document.getElementById("myDate").textContent = myDate || "—";
+        document.getElementById("partnerDate").textContent = partnerDate || "—";
+
+        document
+          .getElementById("myCard")
+          .classList.toggle("active-player", myDone);
+        document
+          .getElementById("partnerCard")
+          .classList.toggle("partner-done", partnerDone);
+
+        // How many days since my last check-in?
+        let daysMissed = 0;
+        if (myDate && myDate !== today) {
+          daysMissed = Math.floor(
+            (new Date(today) - new Date(myDate)) / 86400000,
+          );
+        }
+
+        isRestoreMode = daysMissed > 1;
+
+        // Badges
+        document.getElementById("doneBadge").classList.toggle("show", myDone);
+
+        const missedBadge = document.getElementById("missedBadge");
+        const missedText = document.getElementById("missedText");
+        if (isRestoreMode) {
+          missedText.textContent = `You missed ${daysMissed} day${daysMissed > 1 ? "s" : ""} — tap to restore your streak!`;
+          missedBadge.classList.add("show");
+        } else {
+          missedBadge.classList.remove("show");
+        }
+
+        // Button state
+        const btn = document.getElementById("checkinBtn");
+        if (myDone) {
+          btn.style.display = "none";
+        } else if (isRestoreMode) {
+          btn.style.display = "block";
+          btn.className = "btn btn-restore";
+          btn.innerHTML = "🔙 Restore Streak!";
+        } else {
+          btn.style.display = "block";
+          btn.className = "btn btn-streak";
+          btn.innerHTML = "🔥 Check In Today!";
+        }
+
+        // Pet mood:
+        // • happy  → both checked in today
+        // • sad    → it's today and I haven't checked in yet (and it's not a fresh start)
+        // • idle   → neutral / waiting
+        if (myDone && partnerDone) {
+          setPet("happy", HAPPY_SPEECHES[streak % HAPPY_SPEECHES.length]);
+        } else if (!myDone && streak > 0) {
+          setPet(
+            "sad",
+            SAD_SPEECHES[Math.floor(Math.random() * SAD_SPEECHES.length)],
+          );
+        } else {
+          const speech =
+            streak === 0
+              ? "Hit the button to start your streak! 🔥"
+              : ENCOURAGE_SPEECHES[streak % ENCOURAGE_SPEECHES.length];
+          setPet("idle", speech);
+        }
+      }
+
+      // ── login ─────────────────────────────────────────────────────
+      async function doLogin() {
+        const user = document.getElementById("loginUser").value.trim();
+        const pass = document.getElementById("loginPass").value.trim();
+        if (!user || !pass) {
+          showError("loginError", "Please enter your username and password");
+          return;
+        }
+
+        const btn = document.getElementById("loginBtn");
+        btn.disabled = true;
+        btn.innerHTML =
+          '<div class="loading"><div class="spinner"></div> Verifying...</div>';
+
+        try {
+          const { data, error } = await sb
+            .from("game_data")
+            .select("*")
+            .limit(1)
+            .maybeSingle();
+          if (error) throw error;
+          if (!data) {
+            showError("loginError", "❌ No game data found in database");
+            return;
+          }
+
+          let matched = null;
+          if (data.user1 === user && data.pass1 === pass) matched = "user1";
+          else if (data.user2 === user && data.pass2 === pass)
+            matched = "user2";
+
+          if (!matched) {
+            showError("loginError", "❌ Wrong username or password");
+            return;
+          }
+
+          currentUser = matched;
+          renderGame(data);
+          screen("gameScreen");
+        } catch (e) {
+          showError("loginError", "❌ Connection error: " + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = "Sign In 🚀";
+        }
+      }
+
+      // ── check-in (also handles restore) ──────────────────────────
+      async function doCheckin() {
+        const btn = document.getElementById("checkinBtn");
+        btn.disabled = true;
+        btn.innerHTML =
+          '<div class="loading"><div class="spinner"></div> Saving...</div>';
+
+        try {
+          // Always fetch fresh before writing
+          const { data: fresh, error: fetchErr } = await sb
+            .from("game_data")
+            .select("*")
+            .limit(1)
+            .maybeSingle();
+          if (fetchErr) throw fetchErr;
+          gameRow = fresh;
+
+          const isUser1 = currentUser === "user1";
+          const myDateCol = isUser1 ? "date1" : "date2";
+          const partnerDateCol = isUser1 ? "date2" : "date1";
+          const today = todayStr();
+          const myDate = gameRow[myDateCol];
+          const partnerDate = gameRow[partnerDateCol];
+
+          // Guard: already checked in
+          if (myDate === today) {
+            showStatus("✅ Already checked in today!", "info");
+            renderGame(gameRow);
+            return;
+          }
+
+          const updates = { [myDateCol]: today };
+          let newScore = gameRow.score || 0;
+
+          if (isRestoreMode) {
+            // RESTORE MODE: just update my date, keep the streak score as-is
+            // No score change — we just pick up from here
+            await sb.from("game_data").update(updates).eq("id", gameRow.id);
+
+            const { data: updated } = await sb
+              .from("game_data")
+              .select("*")
+              .limit(1)
+              .maybeSingle();
+            renderGame(updated);
+            showStatus("🔙 Streak restored! Back on track!", "info");
+            setPet("idle", "We're back! Don't miss another day 💪");
+          } else {
+            // NORMAL CHECK-IN
+            // If partner already checked in today → both done → +1 streak
+            if (partnerDate === today) {
+              newScore += 1;
+              updates.score = newScore;
+            }
+
+            await sb.from("game_data").update(updates).eq("id", gameRow.id);
+
+            const { data: updated } = await sb
+              .from("game_data")
+              .select("*")
+              .limit(1)
+              .maybeSingle();
+
+            // Animate score change before renderGame overwrites it
+            if (partnerDate === today) {
+              animateScore(newScore);
+              throwSparkles();
+              fireConfetti();
+              showStatus(
+                `🔥 Both checked in! ${newScore} day${newScore !== 1 ? "s" : ""} in a row! 🎉`,
+                "success",
+              );
+              setPet("happy");
+            } else {
+              showStatus("✅ Checked in! Waiting for your buddy... 👀", "info");
+              setPet("idle", "Your turn is logged — waiting on your buddy 👀");
+            }
+
+            renderGame(updated);
+          }
+        } catch (e) {
+          showStatus("❌ Error: " + e.message, "warning");
+        } finally {
+          btn.disabled = false;
+          // Button text is re-set by renderGame
+        }
+      }
+
+      // ── logout ────────────────────────────────────────────────────
+      function doLogout() {
+        currentUser = null;
+        gameRow = null;
+        isRestoreMode = false;
+        document.getElementById("loginUser").value = "";
+        document.getElementById("loginPass").value = "";
+        screen("loginScreen");
+      }
+
+      // ── enter key ─────────────────────────────────────────────────
+      document.addEventListener("keydown", (e) => {
+        if (
+          e.key === "Enter" &&
+          document.getElementById("loginScreen").classList.contains("active")
+        )
+          doLogin();
+      });
+    </script>
+  </body>
+</html>
